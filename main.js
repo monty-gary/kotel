@@ -6,8 +6,7 @@
       max: 150,
       step: 5,
       output: document.getElementById("brightness-value"),
-      minus: document.getElementById("brightness-minus"),
-      plus: document.getElementById("brightness-plus"),
+      slider: document.getElementById("brightness-slider"),
     },
     sharpness: {
       value: 50,
@@ -15,8 +14,7 @@
       max: 100,
       step: 5,
       output: document.getElementById("sharpness-value"),
-      minus: document.getElementById("sharpness-minus"),
-      plus: document.getElementById("sharpness-plus"),
+      slider: document.getElementById("sharpness-slider"),
     },
   };
 
@@ -47,7 +45,7 @@
     dpr: 1,
     time: 0,
     lastFrame: 0,
-    particles: [],
+    ripples: [],
     lastPointerSpawn: 0,
     pointer: { x: 0, y: 0, active: false },
     lastScrollY: window.scrollY,
@@ -59,12 +57,16 @@
     return Math.min(max, Math.max(min, value));
   }
 
+  function snapToStep(value, min, step) {
+    return min + Math.round((value - min) / step) * step;
+  }
+
   function isCoarsePointer() {
     return coarsePointerMedia.matches;
   }
 
-  function getMaxParticles() {
-    return isCoarsePointer() ? 110 : 230;
+  function getMaxRipples() {
+    return isCoarsePointer() ? 32 : 64;
   }
 
   function getDprCap() {
@@ -89,14 +91,14 @@
 
   function updateControlUI(name) {
     const control = controls[name];
+    control.slider.value = String(control.value);
     control.output.textContent = `${control.value}%`;
-    control.minus.disabled = control.value <= control.min;
-    control.plus.disabled = control.value >= control.max;
   }
 
   function setControl(name, nextValue) {
     const control = controls[name];
-    const clamped = clamp(nextValue, control.min, control.max);
+    const snapped = snapToStep(nextValue, control.min, control.step);
+    const clamped = clamp(snapped, control.min, control.max);
     if (clamped === control.value) {
       return;
     }
@@ -111,12 +113,8 @@
 
   function initControls() {
     Object.entries(controls).forEach(([name, control]) => {
-      control.minus.addEventListener("click", () => {
-        setControl(name, control.value - control.step);
-      });
-
-      control.plus.addEventListener("click", () => {
-        setControl(name, control.value + control.step);
+      control.slider.addEventListener("input", (event) => {
+        setControl(name, Number(event.currentTarget.value));
       });
 
       updateControlUI(name);
@@ -185,30 +183,50 @@
     bgCtx.globalCompositeOperation = "source-over";
   }
 
-  function spawnParticles(x, y, count, velocityScale) {
+  function spawnRipple(x, y, options = {}) {
     if (reducedMotion || !canvasSupported) {
       return;
     }
 
-    const cap = getMaxParticles();
+    const cap = getMaxRipples();
+    if (state.ripples.length >= cap) {
+      state.ripples.shift();
+    }
 
-    for (let i = 0; i < count; i += 1) {
-      if (state.particles.length >= cap) {
-        state.particles.shift();
-      }
+    const coarse = isCoarsePointer();
+    const baseRadius = options.baseRadius ?? (coarse ? 12 : 10);
+    const ttl = options.ttl ?? (coarse ? 900 : 980);
+    const speed = options.speed ?? (coarse ? 0.095 : 0.105);
 
+    state.ripples.push({
+      x,
+      y,
+      age: 0,
+      ttl: ttl + Math.random() * 260,
+      baseRadius: baseRadius + Math.random() * 7,
+      speed: speed + Math.random() * 0.03,
+      lineWidth: (coarse ? 1.5 : 1.3) + Math.random() * 1.2,
+      jitter: 0.8 + Math.random() * 1.7,
+      wobbleFreq: 0.004 + Math.random() * 0.0035,
+      phase: Math.random() * Math.PI * 2,
+      hue: (state.time * 0.02 + Math.random() * 45) % 360,
+      driftX: (Math.random() - 0.5) * 0.012,
+      driftY: (Math.random() - 0.5) * 0.012,
+    });
+  }
+
+  function spawnRippleBurst(x, y, burstSize, spread, intensity) {
+    if (reducedMotion) {
+      return;
+    }
+
+    for (let i = 0; i < burstSize; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = (0.045 + Math.random() * 0.16) * velocityScale;
-      state.particles.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        spin: (Math.random() - 0.5) * 0.01,
-        size: (1.6 + Math.random() * 4.8) * (isCoarsePointer() ? 0.9 : 1.1),
-        age: 0,
-        ttl: 650 + Math.random() * 1100,
-        hue: (state.time * 0.02 + Math.random() * 360) % 360,
+      const dist = Math.random() * spread;
+      spawnRipple(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist, {
+        baseRadius: 8 + intensity * 4 + Math.random() * 4,
+        ttl: 760 + intensity * 240,
+        speed: 0.09 + intensity * 0.03,
       });
     }
   }
@@ -220,43 +238,61 @@
 
     fxCtx.clearRect(0, 0, state.width, state.height);
 
-    if (!state.particles.length) {
+    if (!state.ripples.length) {
       return;
     }
 
     const sharpness = controls.sharpness.value;
 
-    fxCtx.globalCompositeOperation = "lighter";
+    fxCtx.globalCompositeOperation = "screen";
 
-    for (let i = state.particles.length - 1; i >= 0; i -= 1) {
-      const p = state.particles[i];
-      p.age += deltaMs;
+    for (let i = state.ripples.length - 1; i >= 0; i -= 1) {
+      const ripple = state.ripples[i];
+      ripple.age += deltaMs;
 
-      if (p.age >= p.ttl) {
-        state.particles.splice(i, 1);
+      if (ripple.age >= ripple.ttl) {
+        state.ripples.splice(i, 1);
         continue;
       }
 
-      const life = p.age / p.ttl;
+      const life = ripple.age / ripple.ttl;
       const fade = 1 - life;
-      const rot = p.spin * deltaMs;
-      const rx = p.vx * Math.cos(rot) - p.vy * Math.sin(rot);
-      const ry = p.vx * Math.sin(rot) + p.vy * Math.cos(rot);
-      p.vx = rx * 0.995;
-      p.vy = ry * 0.995;
-      p.x += p.vx * deltaMs;
-      p.y += p.vy * deltaMs;
+      ripple.x += ripple.driftX * deltaMs;
+      ripple.y += ripple.driftY * deltaMs;
 
-      const radius = Math.max(0.8, p.size * (0.6 + sharpness / 120) * fade * 2.2);
-      const alpha = 0.42 * fade;
-      const grad = fxCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
-      grad.addColorStop(0, `hsla(${p.hue}, 100%, 72%, ${alpha})`);
-      grad.addColorStop(1, `hsla(${(p.hue + 80) % 360}, 100%, 58%, 0)`);
+      const wave = Math.sin(ripple.phase + ripple.age * ripple.wobbleFreq) * ripple.jitter;
+      const radius = ripple.baseRadius + ripple.speed * ripple.age + wave;
+      const alpha = (0.22 + sharpness / 380) * fade;
+      const edgeAlpha = alpha * 0.55;
+      const ringWidth = ripple.lineWidth + (1 - life) * 0.8;
 
-      fxCtx.fillStyle = grad;
+      fxCtx.strokeStyle = `hsla(${ripple.hue}, 100%, 94%, ${alpha.toFixed(4)})`;
+      fxCtx.lineWidth = ringWidth;
       fxCtx.beginPath();
-      fxCtx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      fxCtx.fill();
+      fxCtx.ellipse(
+        ripple.x,
+        ripple.y,
+        radius,
+        radius * (0.95 + Math.sin(ripple.phase + life * 6) * 0.04),
+        Math.sin(ripple.phase + life * 4) * 0.12,
+        0,
+        Math.PI * 2
+      );
+      fxCtx.stroke();
+
+      fxCtx.strokeStyle = `hsla(${(ripple.hue + 20) % 360}, 100%, 88%, ${edgeAlpha.toFixed(4)})`;
+      fxCtx.lineWidth = Math.max(0.8, ringWidth - 0.6);
+      fxCtx.beginPath();
+      fxCtx.ellipse(
+        ripple.x,
+        ripple.y,
+        radius * 1.12,
+        radius * (1.05 + Math.cos(ripple.phase + life * 7) * 0.03),
+        Math.cos(ripple.phase + life * 3) * 0.1,
+        0,
+        Math.PI * 2
+      );
+      fxCtx.stroke();
     }
 
     fxCtx.globalCompositeOperation = "source-over";
@@ -272,10 +308,10 @@
     }
 
     const now = performance.now();
-    const interval = isCoarsePointer() ? 40 : 20;
+    const interval = isCoarsePointer() ? 64 : 34;
     if (now - state.lastPointerSpawn >= interval) {
       state.lastPointerSpawn = now;
-      spawnParticles(x, y, isCoarsePointer() ? 2 : 3, 1);
+      spawnRipple(x, y);
     }
   }
 
@@ -283,7 +319,9 @@
     if (reducedMotion) {
       return;
     }
-    spawnParticles(x, y, isCoarsePointer() ? 12 : 18, isCoarsePointer() ? 1.2 : 1.5);
+
+    const coarse = isCoarsePointer();
+    spawnRippleBurst(x, y, coarse ? 3 : 5, coarse ? 14 : 20, coarse ? 0.75 : 1);
   }
 
   function handleScroll() {
@@ -292,7 +330,7 @@
     }
 
     const now = performance.now();
-    if (now - state.lastScrollSpawn < 80) {
+    if (now - state.lastScrollSpawn < 120) {
       return;
     }
 
@@ -308,7 +346,9 @@
 
     const x = state.pointer.active ? state.pointer.x : state.width * 0.5;
     const y = state.pointer.active ? state.pointer.y : state.height * 0.5;
-    spawnParticles(x, y, isCoarsePointer() ? 4 : 7, 1 + Math.min(delta / 40, 1.3));
+    const intensity = Math.min(delta / 80, 1.2);
+
+    spawnRippleBurst(x, y, isCoarsePointer() ? 2 : 3, 16, intensity);
   }
 
   function attachInput() {
@@ -375,7 +415,7 @@
       reducedMotion = event.matches;
       motionNote.hidden = !reducedMotion;
       if (reducedMotion) {
-        state.particles.length = 0;
+        state.ripples.length = 0;
       }
       if (canvasSupported) {
         drawBackground(state.time);
@@ -394,7 +434,7 @@
 
     const onPointerTypeChange = () => {
       resizeCanvas();
-      state.particles.length = Math.min(state.particles.length, getMaxParticles());
+      state.ripples.length = Math.min(state.ripples.length, getMaxRipples());
     };
 
     if (typeof coarsePointerMedia.addEventListener === "function") {

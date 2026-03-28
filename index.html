@@ -19,19 +19,37 @@
 
         <div class="control-group" data-control="brightness">
           <p class="control-label" id="brightness-label">Brightness</p>
-          <div class="control-row" role="group" aria-labelledby="brightness-label">
-            <button type="button" id="brightness-minus" class="control-btn" aria-label="Decrease brightness">-</button>
-            <output id="brightness-value" class="value" aria-live="polite" aria-atomic="true">100%</output>
-            <button type="button" id="brightness-plus" class="control-btn" aria-label="Increase brightness">+</button>
+          <div class="control-row">
+            <label class="sr-only" for="brightness-slider">Brightness percentage</label>
+            <input
+              id="brightness-slider"
+              class="control-slider"
+              type="range"
+              min="50"
+              max="150"
+              step="5"
+              value="100"
+              aria-labelledby="brightness-label"
+            />
+            <output id="brightness-value" class="value" aria-live="polite" aria-atomic="true" for="brightness-slider">100%</output>
           </div>
         </div>
 
         <div class="control-group" data-control="sharpness">
           <p class="control-label" id="sharpness-label">Sharpness</p>
-          <div class="control-row" role="group" aria-labelledby="sharpness-label">
-            <button type="button" id="sharpness-minus" class="control-btn" aria-label="Decrease sharpness">-</button>
-            <output id="sharpness-value" class="value" aria-live="polite" aria-atomic="true">50%</output>
-            <button type="button" id="sharpness-plus" class="control-btn" aria-label="Increase sharpness">+</button>
+          <div class="control-row">
+            <label class="sr-only" for="sharpness-slider">Sharpness percentage</label>
+            <input
+              id="sharpness-slider"
+              class="control-slider"
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value="50"
+              aria-labelledby="sharpness-label"
+            />
+            <output id="sharpness-value" class="value" aria-live="polite" aria-atomic="true" for="sharpness-slider">50%</output>
           </div>
         </div>
       </section>
