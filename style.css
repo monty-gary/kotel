@@ -1,0 +1,193 @@
+:root {
+  --panel-bg: rgba(8, 14, 22, 0.62);
+  --panel-border: rgba(255, 255, 255, 0.2);
+  --text: #f4f7ff;
+  --muted: #dbe6ff;
+  --focus-ring: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Nunito Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+  background: #09111b;
+}
+
+#fallback-gradient {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  background: linear-gradient(
+    125deg,
+    #ff1155,
+    #ff7a18,
+    #ffe958,
+    #31f799,
+    #2fd5ff,
+    #6284ff,
+    #b95fff,
+    #ff1155
+  );
+  background-size: 380% 380%;
+  animation: fallback-wave 18s linear infinite;
+}
+
+#fallback-gradient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.26), transparent 40%),
+    radial-gradient(circle at 82% 88%, rgba(0, 0, 0, 0.22), transparent 42%);
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+#bg-canvas {
+  z-index: -2;
+}
+
+#fx-canvas {
+  z-index: -1;
+}
+
+.canvas-ready #fallback-gradient {
+  opacity: 0;
+  transition: opacity 220ms linear;
+}
+
+.ui-shell {
+  position: relative;
+  z-index: 1;
+  width: min(30rem, calc(100vw - 2rem));
+  margin: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(8px) saturate(1.15);
+}
+
+.controls h1 {
+  margin: 0 0 0.9rem;
+  font-size: clamp(1.4rem, 2.4vw, 1.8rem);
+}
+
+.control-group + .control-group {
+  margin-top: 0.75rem;
+}
+
+.control-label {
+  margin: 0;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.control-row {
+  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.control-btn {
+  width: 3rem;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 0.72rem;
+  border: 1px solid var(--panel-border);
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 0.19);
+}
+
+.control-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.control-btn:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.value {
+  display: inline-block;
+  min-width: 4.5rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.motion-note {
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.noscript-note {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 2;
+  max-width: 24rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.68);
+  color: #ffffff;
+}
+
+@media (max-width: 700px) {
+  .ui-shell {
+    width: calc(100vw - 1.2rem);
+    margin: 0.6rem;
+  }
+
+  .control-row {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fallback-gradient {
+    animation: none;
+  }
+
+  .canvas-ready #fallback-gradient {
+    opacity: 1;
+  }
+}
+
+@keyframes fallback-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

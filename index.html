@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Interactive rainbow background with accessible controls and touch/mouse swirls." />
+    <title>Rainbow Swirl</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="fallback-gradient" aria-hidden="true"></div>
+
+    <canvas id="bg-canvas" aria-hidden="true"></canvas>
+    <canvas id="fx-canvas" aria-hidden="true"></canvas>
+
+    <main class="ui-shell">
+      <section class="controls" aria-label="Visual controls">
+        <h1>Rainbow Swirl</h1>
+
+        <div class="control-group" data-control="brightness">
+          <p class="control-label" id="brightness-label">Brightness</p>
+          <div class="control-row" role="group" aria-labelledby="brightness-label">
+            <button type="button" id="brightness-minus" class="control-btn" aria-label="Decrease brightness">-</button>
+            <output id="brightness-value" class="value" aria-live="polite" aria-atomic="true">100%</output>
+            <button type="button" id="brightness-plus" class="control-btn" aria-label="Increase brightness">+</button>
+          </div>
+        </div>
+
+        <div class="control-group" data-control="sharpness">
+          <p class="control-label" id="sharpness-label">Sharpness</p>
+          <div class="control-row" role="group" aria-labelledby="sharpness-label">
+            <button type="button" id="sharpness-minus" class="control-btn" aria-label="Decrease sharpness">-</button>
+            <output id="sharpness-value" class="value" aria-live="polite" aria-atomic="true">50%</output>
+            <button type="button" id="sharpness-plus" class="control-btn" aria-label="Increase sharpness">+</button>
+          </div>
+        </div>
+      </section>
+
+      <p id="motion-note" class="motion-note" hidden>
+        Reduced motion is enabled, so visual animation is minimized.
+      </p>
+    </main>
+
+    <noscript>
+      <div class="noscript-note">
+        JavaScript is disabled. Showing static rainbow fallback background.
+      </div>
+    </noscript>
+
+    <script src="main.js" defer></script>
+  </body>
+</html>
