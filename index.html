@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Interactive rainbow background with accessible controls and touch/mouse swirls." />
+    <meta
+      name="description"
+      content="Interactive rainbow background with accessible controls and touch/mouse swirls."
+    />
     <title>Rainbow Swirl</title>
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -14,8 +17,25 @@
     <canvas id="fx-canvas" aria-hidden="true"></canvas>
 
     <main class="ui-shell">
-      <section class="controls" aria-label="Visual controls">
+      <header class="hero">
+        <p class="eyebrow">Ambient visualizer</p>
         <h1>Rainbow Swirl</h1>
+        <p class="hero-subtitle">
+          A living gradient that responds to your movements, scrolls, and touches while staying
+          grounded in accessibility-friendly defaults.
+        </p>
+        <div class="hero-badges">
+          <span class="badge">Live gradients</span>
+          <span class="badge">Touch &amp; pointer aware</span>
+          <span class="badge">Built for performance</span>
+        </div>
+      </header>
+
+      <section class="controls" aria-label="Visual controls">
+        <div class="controls-header">
+          <h2>Fine-tune the glow</h2>
+          <p>Slide the controls to dial the brightness and sharpness just right or leave it on auto.</p>
+        </div>
 
         <div class="control-group" data-control="brightness">
           <p class="control-label" id="brightness-label">Brightness</p>
@@ -31,7 +51,14 @@
               value="100"
               aria-labelledby="brightness-label"
             />
-            <output id="brightness-value" class="value" aria-live="polite" aria-atomic="true" for="brightness-slider">100%</output>
+            <output
+              id="brightness-value"
+              class="value"
+              aria-live="polite"
+              aria-atomic="true"
+              for="brightness-slider"
+              >100%</output
+            >
           </div>
         </div>
 
@@ -49,9 +76,31 @@
               value="50"
               aria-labelledby="sharpness-label"
             />
-            <output id="sharpness-value" class="value" aria-live="polite" aria-atomic="true" for="sharpness-slider">50%</output>
+            <output
+              id="sharpness-value"
+              class="value"
+              aria-live="polite"
+              aria-atomic="true"
+              for="sharpness-slider"
+              >50%</output
+            >
           </div>
         </div>
+      </section>
+
+      <section class="feature-grid" aria-label="Highlights">
+        <article class="feature-card">
+          <h3>Fluid gradients</h3>
+          <p>Time-based color shifts keep the page alive without heavy media assets.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Touch optimized</h3>
+          <p>Pointer and touch events spawn ripple bursts that feel alive on any surface.</p>
+        </article>
+        <article class="feature-card">
+          <h3>Accessibility first</h3>
+          <p>Reduced motion support, transparent labels, and live regions keep things inclusive.</p>
+        </article>
       </section>
 
       <p id="motion-note" class="motion-note" hidden>
